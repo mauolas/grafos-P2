@@ -1,0 +1,1 @@
+REgla 1: jugar chido
