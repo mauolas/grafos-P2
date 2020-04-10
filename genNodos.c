@@ -7,6 +7,7 @@ typedef struct p2
 {
     int id;
     int cost;
+    int costposicion[2][4];
     struct p2 *sig;
     struct p2 *ant;
     struct p2 *aba;
@@ -22,9 +23,15 @@ void imprimemelo();
 void liberamelo();
 void imprimemelocost();
 int RandomNumberGenerator(const int nMin, const int nMax);
+void costpos();
+void imprimearr();
+int adonde();
+void imptabres(int resultados[][3],int listaLibres[],int listaNoLibres[]);
+void actlistas(int listaLibres[],int listaNoLibres[]);
 
 int main()
 {
+
     int matriz[15][3];
     for (int i = 0; i < 15; i++) {
       matriz[i][0]=i+1;
@@ -33,14 +40,29 @@ int main()
     matriz[0][2]=0;
     system("clear");
     int op;
+    int listaLibres[10];
+    int listaNoLibres[10];
+    int resultados[10][3];
+    for (int i = 0; i < 10; i++) {
+      listaLibres[i]=i+1;
+      listaNoLibres[i]=0;
+      resultados[i][0]=i+1;
+      resultados[i][1]=999;
+      resultados[i][2]=0;
+    }
+    resultados[0][1]=0;
 
-    while(op!=4)
+
+    while(op!=7)
     {
         printf("\n\n\t\t\t\t**Menú**\n");
         printf("\t\t\t1. Insertar datos.\n");
         printf("\t\t\t2. Mostrar mapa de datos.\n");
         printf("\t\t\t3. Imprime costos.\n");
-        printf("\t\t\t4. Salir.\n");
+        printf("\t\t\t4. Planea costo.\n");
+        printf("\t\t\t5. Imprime tabla resultados.\n");
+        printf("\t\t\t6. Moverse.\n");
+        printf("\t\t\t7. Salir.\n");
         printf("\nIngresa la opción que deseas: ");
         scanf("%i", &op);
 
@@ -67,6 +89,39 @@ int main()
             system("clear");
             break;
         case 4:
+            costpos();
+            imprimearr();
+            for (int i = 0; i < 4; i++) {
+              int x=1;
+              if (motor->costposicion[0][i] != -1) {
+                while (x != motor->costposicion[1][i]) {
+                  x++;
+                }
+                if (resultados[x-1][1]>motor->costposicion[0][i]) {
+                  resultados[x-1][1]=motor->costposicion[0][i];
+                  resultados[x-1][2]=motor->id;
+                }
+              }
+            }
+            actlistas(listaLibres,listaNoLibres);
+            //adonde();
+            getchar();
+            getchar();
+            system("clear");
+            break;
+        case 5:
+            imptabres(resultados,listaLibres,listaNoLibres);
+            getchar();
+            getchar();
+            system("clear");
+            break;
+
+        case 6:
+            printf("Nos movemos para:\n");
+            adonde(listaNoLibres);
+            break;
+
+        case 7:
             printf("Estoy saliendo\n");
             liberamelo();
             break;
@@ -91,7 +146,7 @@ void insertar()
     nuevo->aba=NULL;
     nuevo->arr=NULL;
     nuevo->ant=NULL;
-    nuevo->cost=RandomNumberGenerator(1,10);
+    nuevo->cost=RandomNumberGenerator(1,9);
     nuNodo=nuevo;
 
 }
@@ -106,6 +161,7 @@ void acomodamelo(){
   if (raiz==NULL ) {
     raiz=nuNodo;
     nuNodo=NULL;
+    motor=raiz;
   }
   else{
     //While para recorrer filas
@@ -245,4 +301,131 @@ void imprimemelocost(){
     printf("%d\n",aux2->cost );
   }
 
+}
+
+void costpos() {
+  //Posicion 0=arriba 1=derecha 2=abajo 3=izquierda
+  //Sacar costo arribq
+  if (motor->arr !=NULL) {
+    int temp=(motor->arr)->cost - motor->cost;
+    if (temp<0) {
+      temp=temp*(-1);
+    }
+    motor->costposicion[0][0]=temp;
+    motor->costposicion[1][0]=(motor->arr)->id;
+  }
+  else{
+    motor->costposicion[0][0]=-1;
+    motor->costposicion[1][0]=0;
+  }
+  //sacar costo derecha
+  if (motor->sig !=NULL) {
+    int temp=(motor->sig)->cost - motor->cost;
+    if (temp<0) {
+      temp=temp*(-1);
+    }
+    motor->costposicion[0][1]=temp;
+    motor->costposicion[1][1]=(motor->sig)->id;
+  }
+  else{
+    motor->costposicion[0][1]=-1;
+    motor->costposicion[1][1]=0;
+  }
+  //sacar costo abajo
+  if (motor->aba !=NULL) {
+    int temp=(motor->aba)->cost - motor->cost;
+    if (temp<0) {
+      temp=temp*(-1);
+    }
+    motor->costposicion[0][2]=temp;
+    motor->costposicion[1][2]=(motor->aba)->id;
+  }
+  else{
+    motor->costposicion[0][2]=-1;
+    motor->costposicion[1][2]=0;
+  }
+  //sacar costo izquierda
+  if (motor->ant !=NULL) {
+    int temp=(motor->ant)->cost - motor->cost;
+    if (temp<0) {
+      temp=temp*(-1);
+    }
+    motor->costposicion[0][3]=temp;
+    motor->costposicion[1][3]=(motor->ant)->id;
+  }
+  else{
+    motor->costposicion[0][3]=-1;
+    motor->costposicion[1][3]=0;
+  }
+}
+
+void imprimearr(){
+  for (int i = 0; i < 4; i++) {
+    printf("Costo: %d,",motor->costposicion[0][i]);
+    printf("ID: %d\n",motor->costposicion[1][i]);
+  }
+}
+
+void imptabres(int resultados[][3],int listaLibres[],int listaNoLibres[]){
+  for (int i = 0; i < 10; i++) {
+    printf("%d\t%d\t%d\n",resultados[i][0],resultados[i][1],resultados[i][2] );
+  }
+  printf("Tabla libres:");
+  for (int x = 0; x < 10; x++) {
+    printf("%d,",listaLibres[x] );
+  }
+  printf("\nTabla no libres:");
+  for (int x = 0; x < 10; x++) {
+    printf("%d,",listaNoLibres[x] );
+  }
+}
+
+int adonde(int listaNoLibres[]) {
+  int temp = 10;
+  int pos=-1;
+  for (int i = 0; i < 4; i++) {
+    if (motor->costposicion[0][i] != -1) {
+      int x=0;
+      int bandera=0;
+      while (motor->costposicion[1][i] != listaNoLibres[x] && x<10) {
+        x++;
+      }
+      if (motor->costposicion[1][i] == listaNoLibres[x]) {
+        bandera = 1;
+      }
+      if (motor->costposicion[0][i]<temp && bandera == 0) {
+        temp=motor->costposicion[0][i];
+        pos = i;
+      }
+    }
+  }
+  if (pos==0) {
+    printf("Arriba\n");
+    motor=motor->arr;
+  }
+  else if(pos==1){
+    printf("derecha\n");
+    motor=motor->sig;
+  }
+  else if(pos==2){
+    printf("abajo\n");
+    motor=motor->aba;
+  }
+  else if(pos==3){
+    printf("izquierda\n");
+    motor=motor->ant;
+  }
+  else{
+    printf("No me puedo mover hermano\n");
+  }
+  return temp;
+}
+
+void actlistas(int listaLibres[],int listaNoLibres[]){
+  int i=0;
+  while (listaLibres[i]!=motor->id) {
+    i++;
+  }
+  listaLibres[i]=0;
+  listaNoLibres[i]=motor->id;
 }
